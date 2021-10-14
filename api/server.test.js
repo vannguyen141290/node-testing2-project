@@ -1,3 +1,5 @@
+const request = require('supertest')
+const server = require('../api/server')
 const db = require('../data/db-config')
 const User = require('./users/users-model')
 
@@ -92,3 +94,54 @@ describe('[4] User.remove()', () => {
     })
 })
 
+
+////////////////////////////////////////////
+////////////////////////////////////////////
+////        TESTING ENDPOINTS      /////////
+
+describe('[5] GET /api/users', () => {
+    let response
+    beforeEach(async () => {
+        response = await request(server).get('/api/users')
+    })
+    it('returns status 200 OK', async () => {
+        expect(response.status).toBe(200)
+    })
+    it('returns JSON body with the correct users array', () => {
+        expect(response.body).toHaveLength(2)
+    })
+    it('returns JSON as type of res.body', () => {
+        expect(response.type).toBe('application/json')
+    })
+})
+describe('[6] POST /api/users', () => {
+    let res
+    it('returns status 400 if missing user_name', async () => {
+        res = await request(server).post('/api/users').send()
+        expect(res.status).toBe(400)
+    })
+    it('returns message: "invalid username" if missing user_name', async () => {
+        res = await request(server).post('/api/users').send()
+        expect(res.body).toMatchObject({ "message": "invalid username" })
+    })
+    it('returns status 400 with message "invalid username" if user_name is not a string', async () => {
+        res = await request(server).post('/api/users').send({ user_name: 1234 })
+        expect(res.status).toBe(400)
+        expect(res.body).toMatchObject({ "message": "invalid username" })
+    })
+    it('returns status 400 with message "invalid username" if user_name is an empty string', async () => {
+        res = await request(server).post('/api/users').send({ user_name: "" })
+        expect(res.status).toBe(400)
+        expect(res.body).toMatchObject({ "message": "invalid username" })
+    })
+    it('returns status 400 with message "username already taken" if giving an existing username', async () => {
+        res = await request(server).post('/api/users').send({ user_name: "sanoo" })
+        expect(res.status).toBe(400)
+        expect(res.body).toMatchObject({ "message": "username already taken" })
+    })
+    it('returns status 201 with a newly created user', async () => {
+        res = await request(server).post('/api/users').send({ user_name: "foo" })
+        expect(res.status).toBe(201)
+        expect(res.body).toMatchObject({ user_name: "foo" })
+    })
+})

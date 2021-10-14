@@ -7,6 +7,11 @@ function getById(id) {
     return db('users').where('id', id).first()
 }
 
+function findBy(filter) {
+    return db('users').where(filter)
+
+}
+
 async function create(user) {
     const [id] = await db('users').insert(user)
     return await getById(id)
@@ -24,5 +29,5 @@ module.exports = {
     getAll,
     getById,
     create,
-    remove
+    remove, findBy
 }
